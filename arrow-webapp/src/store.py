@@ -21,31 +21,10 @@ from google.appengine.ext import webapp
 from google.appengine.ext import db
 from google.appengine.api import memcache
 
-class Chunk(db.Model):
-    # The chunk identifier; the hex hash of the chunk.
-    id = db.StringProperty(required = True)
-    
-    # The weak checksum of the chunk.
-    weaksum = db.IntegerProperty(required = True)
-    
-    # The chunk data.
-    data = db.BlobProperty(required = True)
-    
-    # The chunk parity (optional; we aren't computing this now)
-    parity = db.BlobProperty(required = False)
-    
-    # The reference count to this chunk.
-    refcount = db.IntegerProperty(required = True)
+import arrow
+import chunk
 
 class StoreHandler(webapp.RequestHandler):
-    def get_id(self, path):
-        """
-        Fetch the ID portion of a store URL. Each store url is of the
-        form '/store/hex-chunk-id'.
-        """
-        paths = path.split('/')
-        return paths[len(paths)-1].lower()
-    
     def get_chunk(self, id):
         """
         Fetch a chunk from the store.
@@ -64,7 +43,7 @@ class StoreHandler(webapp.RequestHandler):
 
     # Head tells you if this chunk exists or not.
     def head(self):
-        id = self.get_id(self.response.path)
+        id = getid(self.request.path)
         chunk = self.get_chunk(id)
         if chunk is not None:
             self.response.headers['X-Arrow-ContentLength'] = len(chunk.data)
@@ -77,7 +56,7 @@ class StoreHandler(webapp.RequestHandler):
     
     # Fetches a chunk.
     def get(self):
-        id = self.get_id(self.request.path)
+        id = getid(self.request.path)
         chunk = self.get_chunk(id)
         if chunk is not None:
             self.response.headers['X-Arrow-ContentLength'] = str(len(chunk.data))
@@ -93,7 +72,7 @@ class StoreHandler(webapp.RequestHandler):
 
     # Puts a new chunk.
     def put(self):
-        id = self.get_id(self.request.path)
+        id = getid(self.request.path)
         chunk = self.get_chunk(id)
         if chunk is not None:
             chunk.refcount = chunk.refcount + 1
@@ -110,7 +89,7 @@ class StoreHandler(webapp.RequestHandler):
 
     # Addref a chunk.
     def post(self):
-        id = self.get_id(self.request.path)
+        id = getid(self.request.path)
         chunk = self.get_chunk(id)
         if chunk is None:
             self.response.status = 404
@@ -122,7 +101,7 @@ class StoreHandler(webapp.RequestHandler):
 
     # Deref a chunk.
     def delete(self):
-        id = self.get_id(self.request.path)
+        id = getid(self.request.path)
         chunk = self.get_chunk(id)
         if chunk is None:
             self.response.status = 404

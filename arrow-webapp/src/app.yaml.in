@@ -1,5 +1,5 @@
 application: arrow-webapp
-version: 0.0.1 (@@SVN_REVISION@@)
+version: @@SVN_REVISION@@
 runtime: python
 api_version: 1
 
@@ -10,3 +10,7 @@ handlers:
   script: store.py
 - url: /files/.*
   script: filer.py
+- url: /root/.*
+  script: view.py
+- url: /tree/.*
+  script: tree.py
