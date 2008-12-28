@@ -1,0 +1,11 @@
+This is the final project report for arrow, as submitted for my
+master's degree.
+
+If you want to regenerate the report (minus the SSRC tech report cover
+page) or the cover page, run:
+
+  pdflatex arrow
+  bibtex arrow
+  pdflatex arrow
+
+  pdflatex arrow-coverpage
